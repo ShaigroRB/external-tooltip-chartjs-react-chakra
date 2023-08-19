@@ -49,6 +49,7 @@ export const LineChart = () => {
                 const newTooltipData: TooltipData = {
                   dataIndex: tooltip.dataPoints[0].dataIndex,
                   dataPoints: tooltip.dataPoints,
+                  left: tooltip.caretX,
                 };
 
                 if (areTooltipDatasDifferent(newTooltipData, tooltipData)) {

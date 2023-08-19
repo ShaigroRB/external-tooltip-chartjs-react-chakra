@@ -5,11 +5,13 @@ import { DownRightIcon, NeutralIcon, SquareIcon, UpRightIcon } from "../icons";
 export type TooltipData = {
   dataIndex: number;
   dataPoints: TooltipItem<"line">[];
+  left: number;
 };
 
 export const defaultTooltipData: TooltipData = {
   dataIndex: -1,
   dataPoints: [],
+  left: 0,
 };
 
 /**
@@ -28,7 +30,7 @@ const isCurrentHigherThanPrev = (
   return values[currIndex] > values[prevIndex];
 };
 
-export const ChartTooltip = ({ dataPoints }: TooltipData) => {
+export const ChartTooltip = ({ dataPoints, left }: TooltipData) => {
   return (
     <Tooltip
       isOpen={true}
@@ -42,8 +44,10 @@ export const ChartTooltip = ({ dataPoints }: TooltipData) => {
           ))}
         </Box>
       }
+      hasArrow
+      placement="right"
     >
-      <Box position="absolute" />
+      <Box position="absolute" top="35%" left={left} />
     </Tooltip>
   );
 };
