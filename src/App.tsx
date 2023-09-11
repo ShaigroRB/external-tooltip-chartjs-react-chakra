@@ -1,35 +1,50 @@
+import { Box, Flex, Tooltip } from "@chakra-ui/react";
+import {
+  CategoryScale,
+  Chart,
+  LineElement,
+  LinearScale,
+  PointElement,
+  Tooltip as ChartTooltip,
+  TooltipItem,
+} from "chart.js";
 import { useState } from "react";
 import { Line } from "react-chartjs-2";
 import { FAKE_DATA } from "./utils";
-import { Box, useDisclosure } from "@chakra-ui/react";
-import { ChartTooltip, TooltipData, defaultTooltipData } from "./chart-tooltip";
 
-export const App = () => {
-  const [] = useState();
+Chart.register([
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  ChartTooltip,
+]);
 
-  return (
-    <Box>
-      <LineChart />
-    </Box>
-  );
+export const App = () => <LineChart />;
+
+type TooltipData = {
+  dataPoints: TooltipItem<"line">[];
+  left: number;
 };
 
-export const LineChart = () => {
-  const {
-    isOpen: isTooltipOpen,
-    onOpen: openTooltip,
-    onClose: closeTooltip,
-  } = useDisclosure();
+const LineChart = () => {
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+  const [data, setData] = useState<TooltipData>({ dataPoints: [], left: -1 });
 
-  const [tooltipData, setTooltipData] =
-    useState<TooltipData>(defaultTooltipData);
-
-  const { datasets, ...data } = FAKE_DATA;
+  const resetData = () => {
+    setData({ dataPoints: [], left: -1 });
+  };
+  const closeTooltip = () => {
+    setIsTooltipOpen(false);
+  };
+  const openTooltip = () => {
+    setIsTooltipOpen(true);
+  };
 
   return (
     <Box position="relative">
       <Line
-        data={{ datasets, ...data }}
+        data={FAKE_DATA}
         options={{
           interaction: {
             intersect: false,
@@ -40,36 +55,52 @@ export const LineChart = () => {
               enabled: false,
               external: ({ tooltip }) => {
                 if (tooltip.opacity === 0 && isTooltipOpen) {
-                  // reset tooltip data
-                  setTooltipData(defaultTooltipData);
+                  resetData();
                   closeTooltip();
                   return;
                 }
 
-                const newTooltipData: TooltipData = {
-                  dataIndex: tooltip.dataPoints[0].dataIndex,
+                const newData = {
                   dataPoints: tooltip.dataPoints,
                   left: tooltip.caretX,
                 };
 
-                if (areTooltipDatasDifferent(newTooltipData, tooltipData)) {
-                  setTooltipData(newTooltipData);
+                if (arePositionsDifferent(data, newData)) {
+                  setData(newData);
                   openTooltip();
                 }
               },
             },
           },
         }}
-        height="90rem"
       />
-      {isTooltipOpen && <ChartTooltip {...tooltipData} />}
+      {isTooltipOpen && <CustomTooltip {...data} />}
     </Box>
   );
 };
 
-const areTooltipDatasDifferent = (
-  data1: TooltipData,
-  data2: TooltipData
-): boolean => {
-  return data1.dataIndex !== data2.dataIndex;
-};
+const arePositionsDifferent = (d1: TooltipData, d2: TooltipData) =>
+  d1.left !== d2.left;
+
+const CustomTooltip = (data: TooltipData) => (
+  <Tooltip
+    isOpen={true}
+    label={
+      <Box>
+        {data.dataPoints.map((point) => (
+          <Flex gridGap="1rem" key={`${point.datasetIndex}-${point.dataIndex}`}>
+            <Box
+              backgroundColor={point.dataset.borderColor as string}
+              boxSize="1rem"
+            />
+            {point.formattedValue}
+          </Flex>
+        ))}
+      </Box>
+    }
+    hasArrow
+    placement="right"
+  >
+    <Box boxSize="1rem" position="absolute" top="35%" left={data.left} />
+  </Tooltip>
+);
